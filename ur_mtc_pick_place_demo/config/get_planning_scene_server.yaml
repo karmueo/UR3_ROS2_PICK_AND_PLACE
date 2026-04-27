@@ -7,13 +7,15 @@ get_planning_scene_server:
     target_frame: "base_link"
 
     # Cropping settings
+    # crop box 收紧：排除机器人自身（基座附近 x<0.12、以及 torso/相机高度 z>0.35）
+    # 否则 shape_mask 过滤不全的机器人点云会被聚类成幽灵 box/cylinder，挡住规划。
     enable_cropping: true
-    crop_min_x: 0.05
+    crop_min_x: 0.12         # 0.05 → 0.12 排除基座附近
     crop_max_x: 0.80
-    crop_min_y: -0.40
+    crop_min_y: -0.10
     crop_max_y: 0.50
     crop_min_z: -0.10
-    crop_max_z: 0.60
+    crop_max_z: 0.35         # 0.60 → 0.35 排除相机/torso 高度的幽灵
 
     # Plane and object segmentation parameters
     max_iterations: 100
@@ -34,7 +36,8 @@ get_planning_scene_server:
 
     # Support surface parameters
     support_surface_name: "support_surface"
-    min_surface_thickness: 0.0001
+    # 提高到 1cm，防止短物体（如 coke_can）顶面这种薄水平盘被当成"第二平面"吃掉
+    min_surface_thickness: 0.01
 
     # Normal, curvature, and RSD estimation parameters
     k_neighbors: 30
@@ -49,24 +52,31 @@ get_planning_scene_server:
     curvature_threshold: 0.2
 
     # Object segmentation parameters
+    # inlier_threshold / ransac_distance_threshold 原值对"罐顶盘+半圆侧面"混合点云过严格。
+    # 针对 coke_can 放宽：允许更少 inliers 比例、更大距离容差。
     num_iterations: 5
-    inlier_threshold: 85
+    inlier_threshold: 12               # 85 → 12，coke_can 罐顶内部填充点让圆周 inliers 很少
     hough_radius_bins: 50
     hough_center_bins: 50
-    ransac_distance_threshold: 0.001
-    ransac_max_iterations: 1000
+    ransac_distance_threshold: 0.008   # 0.001 → 0.008，进一步放宽
+    ransac_max_iterations: 3000        # 1000 → 3000 多迭代增加找到圆的概率
 
     # Circle inlier filtering parameters
+    # 放宽阈值以支持更粗的圆柱（coke_can 半径 3.3cm vs 原 red_cylinder 1.2cm）
     circle_min_cluster_size: 20
     circle_max_clusters: 2
-    circle_height_tolerance: 0.025
-    circle_curvature_threshold: 0.0015
-    circle_radius_tolerance: 0.020
-    circle_normal_angle_threshold: 0.2
-    circle_cluster_tolerance: 0.025
+    circle_height_tolerance: 0.05         # 0.025 → 0.05
+    circle_curvature_threshold: 0.005     # 0.0015 → 0.005
+    circle_radius_tolerance: 0.05         # 0.020 → 0.05
+    circle_normal_angle_threshold: 0.3    # 0.2 → 0.3
+    circle_cluster_tolerance: 0.04        # 0.025 → 0.04
 
     # Line inlier filtering parameters
-    line_min_cluster_size: 20
+    # 故意把 line_min_cluster_size 设成极高值，等效"关掉 line 检测"。
+    # 原因：coke_can cluster 会同时产生 circle+line 拟合，lines 票数高就会赢，
+    # 导致整个 cluster 被判为 box，而我们要 cylinder。
+    # 只要我们抓 cylinder 类物体，就不需要 line 路径。
+    line_min_cluster_size: 100000
     line_max_clusters: 1
     line_curvature_threshold: 0.0011
     line_cluster_tolerance: 0.025
@@ -74,10 +84,11 @@ get_planning_scene_server:
     line_theta_threshold: 0.1
 
     # Shape fitting parameters
-    shape_fitting_max_iterations: 1000
-    shape_fitting_distance_threshold: 0.01
+    # 放宽 RANSAC 容差，让 coke_can 侧面柱面能被拟合
+    shape_fitting_max_iterations: 2000          # 1000 → 2000，给更多迭代
+    shape_fitting_distance_threshold: 0.005     # 0.01 → 0.005，精度要求适中
     shape_fitting_min_radius: 0.01
-    shape_fitting_max_radius: 0.1
+    shape_fitting_max_radius: 0.08              # coke_can r=3.3cm 在范围内
     shape_fitting_normal_distance_weight: 0.1
     shape_fitting_normal_search_radius: 0.05
 

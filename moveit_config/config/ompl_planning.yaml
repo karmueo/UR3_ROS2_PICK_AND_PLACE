@@ -1,14 +1,16 @@
-planning_plugin: ompl_interface/OMPLPlanner
+planning_plugins:
+  - ompl_interface/OMPLPlanner
 # To optionally use Ruckig for jerk-limited smoothing, add it to request_adapters below
-request_adapters: >-
-  default_planner_request_adapters/ResolveConstraintFrames
-  default_planner_request_adapters/FixWorkspaceBounds
-  default_planner_request_adapters/FixStartStateBounds
-  default_planner_request_adapters/FixStartStateCollision
-response_adapters: >-
-  default_planning_response_adapters/AddTimeParameterization
-  default_planning_response_adapters/ValidateSolution
-  default_planning_response_adapters/DisplayMotionPath
+request_adapters:
+  - default_planning_request_adapters/ResolveConstraintFrames
+  - default_planning_request_adapters/ValidateWorkspaceBounds
+  - default_planning_request_adapters/CheckStartStateBounds
+  - default_planning_request_adapters/CheckStartStateCollision
+response_adapters:
+  # Jazzy 已移除 AddTimeParameterization (IPTP)，改用 TOTG；Jazzy 里 TOTG bug 已修。
+  - default_planning_response_adapters/AddTimeOptimalParameterization
+  - default_planning_response_adapters/ValidateSolution
+  - default_planning_response_adapters/DisplayMotionPath
 planner_configs:
   APSConfigDefault:
     type: geometric::AnytimePathShortening
@@ -48,7 +50,8 @@ planner_configs:
     goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
   RRTConnectkConfigDefault:
     type: geometric::RRTConnect
-    range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    # 关节空间单步上限 (rad)：强制密集路径点，避免 TOTG 遇到单段 >180° 关节差而拒绝参数化
+    range: 0.5
   RRTstarkConfigDefault:
     type: geometric::RRTstar
     range: 0.0  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
@@ -141,8 +144,9 @@ planner_configs:
   TrajOptDefault:
     type: geometric::TrajOpt
 trajectory_execution:
-  allowed_execution_duration_scaling: 1.2
-  allowed_goal_duration_margin: 0.5
+  # 放宽 duration 缩放与 margin，避免夹爪闭合在物体表面失速时被过早取消
+  allowed_execution_duration_scaling: 5.0
+  allowed_goal_duration_margin: 10.0
   allowed_start_tolerance: 0.1
   execution_duration_monitoring: false
 arm:

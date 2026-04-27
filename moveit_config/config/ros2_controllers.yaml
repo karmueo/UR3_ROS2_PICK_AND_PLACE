@@ -43,7 +43,15 @@ arm_controller:
       goal_time: 5.0
 gripper_controller:
   ros__parameters:
+    # 抓取侧关节（Robotiq 2F-85 的驱动关节，其余指节由 URDF mimic 跟随）
     joint: finger_joint
+    # GripperActionController 正确参数名是 default_tolerance（非 default_goal_tolerance）
+    # 放宽到 0.1 rad：commanded 0.22 在物理阻塞于 ~0.18 时仍判为 reached，立即结束 action
+    default_tolerance: 0.1
+    # 失速作为备选成功路径（速度 < 阈值 持续 timeout 秒后，即使未到 tolerance 也算成功）
+    stall_velocity_threshold: 0.08
+    stall_timeout: 1.0
+    allow_stalling: true
 # arm_with_gripper_controller:
 #   ros__parameters:
 #     joints:

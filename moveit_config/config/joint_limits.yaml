@@ -19,6 +19,13 @@ joint_limits:
     max_velocity: 3.1415926535897931
     has_acceleration_limits: true
     max_acceleration: 6.0
+    # Phase 9: 防触地约束 — 肩部不得翻至水平面以下
+    # base_link z=0，shoulder z=0.152，upper_arm 长 0.244 m
+    # shoulder_lift > 0 时肘部 z < 0.152，>0.65 rad 时肘部 z < 0
+    # 抓取/放置/home 均在 [-π, 0] 内可达；正值仅用于"反向后伸"，本任务不需要
+    has_position_limits: true
+    max_position: 0.0
+    min_position: -3.1415926535897931
 
   elbow_joint:
     has_velocity_limits: true

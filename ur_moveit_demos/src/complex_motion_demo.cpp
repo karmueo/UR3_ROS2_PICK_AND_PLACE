@@ -51,7 +51,7 @@ bool run_cartesian(
   }
 
   MoveGroupInterface::Plan plan;
-  plan.trajectory_ = trajectory;
+  plan.trajectory = trajectory;
   auto result = arm.execute(plan);
 
   if (result == moveit::core::MoveItErrorCode::SUCCESS) {

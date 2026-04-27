@@ -167,14 +167,16 @@
       </clip>
     </camera>
     <always_on>1</always_on>
-    <update_rate>10</update_rate>
+    <!-- 相机更新频率 10 Hz → 5 Hz；感知管线只需检测稳定物体，5 Hz 充裕 -->
+    <update_rate>5</update_rate>
     <gz_frame_id>camera_head_link</gz_frame_id>
     <output>
       <image>true</image>
       <depth_image>true</depth_image>
       <point_cloud>true</point_cloud>
     </output>
-    <visualize>true</visualize>
+    <!-- 关闭 GUI 内的相机预览渲染，省 5–10% RTF；不影响话题数据流 -->
+    <visualize>false</visualize>
   </sensor>
 </gazebo>
 

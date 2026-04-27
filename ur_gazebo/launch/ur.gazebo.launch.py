@@ -151,6 +151,19 @@ def generate_launch_description():
         'GZ_SIM_RESOURCE_PATH',
         gazebo_models_path
     )
+    # Gazebo 会把 URDF 里的 package:// 重写成 model://<pkg>/<path> 再按 GZ_SIM_RESOURCE_PATH 解析。
+    # 需要把引用到的 mesh 所属包的上层 share 目录加入，否则 Gazebo 渲染时找不到 mesh，
+    # 表现为夹爪只显示 finger pad 原始几何体而 mesh 部分缺失。
+    pkg_share_robotiq = FindPackageShare('robotiq_2f_85_gripper_visualization').find(
+        'robotiq_2f_85_gripper_visualization')
+    set_env_vars_resources_robotiq = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.path.dirname(pkg_share_robotiq)  # 去掉末尾包名，得到 .../install/<pkg>/share/
+    )
+    set_env_vars_resources_ur_desc = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.path.dirname(pkg_share_description)
+    )
 
     # load_controllers_cmd = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource([
@@ -282,6 +295,8 @@ def generate_launch_description():
     )
 
     ld.add_action(set_env_vars_resources)
+    ld.add_action(set_env_vars_resources_robotiq)
+    ld.add_action(set_env_vars_resources_ur_desc)
     ld.add_action(robot_state_publisher_cmd)
     ld.add_action(start_gazebo_cmd)
     ld.add_action(start_gazebo_headless_cmd)

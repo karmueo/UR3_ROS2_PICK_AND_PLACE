@@ -91,13 +91,8 @@
                  command_interface here fights physics and causes asymmetric finger motion.
                  Per-joint initial_value keys prevent right-side joints from starting at limits. -->
 
-            <!-- left_outer_knuckle_joint (was missing — added) -->
-            <joint name="left_outer_knuckle_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['left_outer_knuckle_joint']}</param>
-                </state_interface>
-                <state_interface name="velocity"/>
-            </joint>
+            <!-- 注意：本 URDF 的夹爪设计下不存在独立的 left_outer_knuckle_joint，
+                 finger_joint (见上) 就是左外指节主驱动关节。此处保留注释以防误补。 -->
 
             <!-- right_outer_knuckle_joint -->
             <joint name="right_outer_knuckle_joint">

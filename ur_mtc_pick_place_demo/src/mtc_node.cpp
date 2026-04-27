@@ -45,6 +45,7 @@
 // Other utilities
 #include <type_traits>
 #include <numeric>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -341,7 +342,11 @@ void MTCTaskNode::doTask()
   // Attempt to plan the task
   if (!task_.plan(max_solutions))
   {
-    RCLCPP_ERROR(this->get_logger(), "Task planning failed");
+    // 规划失败：打印 task tree 和每个 stage 的 成功/失败 计数，定位具体挂在哪一步
+    std::ostringstream oss;
+    task_.printState(oss);
+    RCLCPP_ERROR(this->get_logger(),
+                 "Task planning failed. Stage-level state:\n%s", oss.str().c_str());
     return;
   }
 
@@ -658,6 +663,27 @@ mtc::Task MTCTaskNode::createTask()
     }
 
     /****************************************************
+---- *   Allow collision (attached object, arm & torso)*
+     ***************************************************/
+    {
+      // 被抓物附着到 gripper 后，在运输过程中 FCL 会把它视为机器人的一部分；
+      // 若规划器选择"折臂"构型把罐子摆到 upper_arm_link/wrist/torso 附近，
+      // ValidateSolution 会把这种几何接近判为 INVALID_MOTION_PLAN。
+      // 由于此处是虚拟几何互碰（真实夹爪已夹住），在 transport 阶段豁免该碰撞，
+      // 在 detach 前再恢复禁止（见 place 容器的 forbid 阶段）。
+      auto stage = std::make_unique<mtc::stages::ModifyPlanningScene>("allow collision (object,arm_torso)");
+      stage->allowCollisions(
+        object_name,
+        std::vector<std::string>{
+          "shoulder_link", "upper_arm_link", "forearm_link",
+          "wrist_1_link", "wrist_2_link", "wrist_3_link",
+          "torso_link", "camera_head_link"
+        },
+        true);
+      grasp->insert(std::move(stage));
+    }
+
+    /****************************************************
 ---- *       Lift object                               *
      ***************************************************/
     {
@@ -789,6 +815,23 @@ mtc::Task MTCTaskNode::createTask()
     {
       auto stage = std::make_unique<mtc::stages::ModifyPlanningScene>("forbid collision (gripper,object)");
       stage->allowCollisions(object_name, *task.getRobotModel()->getJointModelGroup(gripper_group_name),
+        false);
+      place->insert(std::move(stage));
+    }
+
+    /******************************************************
+---- *  Forbid collision (object, arm & torso)            *
+     *****************************************************/
+    {
+      // 放置完成后撤销 transport 阶段的碰撞豁免，恢复 detach 后的安全自碰撞检查。
+      auto stage = std::make_unique<mtc::stages::ModifyPlanningScene>("forbid collision (object,arm_torso)");
+      stage->allowCollisions(
+        object_name,
+        std::vector<std::string>{
+          "shoulder_link", "upper_arm_link", "forearm_link",
+          "wrist_1_link", "wrist_2_link", "wrist_3_link",
+          "torso_link", "camera_head_link"
+        },
         false);
       place->insert(std::move(stage));
     }

@@ -42,11 +42,11 @@ int main(int argc, char * argv[])
   if (arm.plan(plan) == moveit::core::MoveItErrorCode::SUCCESS) {
     auto robot_model = arm.getRobotModel();
     auto robot_traj = std::make_shared<robot_trajectory::RobotTrajectory>(robot_model, "arm");
-    robot_traj->setRobotTrajectoryMsg(*arm.getCurrentState(), plan.trajectory_);
+    robot_traj->setRobotTrajectoryMsg(*arm.getCurrentState(), plan.trajectory);
     if (!totg.computeTimeStamps(*robot_traj, 0.3, 0.3)) {
       RCLCPP_ERROR(logger, "Time parameterization for home FAILED.");
     } else {
-      robot_traj->getRobotTrajectoryMsg(plan.trajectory_);
+      robot_traj->getRobotTrajectoryMsg(plan.trajectory);
     }
     arm.execute(plan);
   } else {
@@ -95,11 +95,11 @@ int main(int argc, char * argv[])
   if (arm.plan(start_plan) == moveit::core::MoveItErrorCode::SUCCESS) {
     auto robot_model = arm.getRobotModel();
     auto robot_traj = std::make_shared<robot_trajectory::RobotTrajectory>(robot_model, "arm");
-    robot_traj->setRobotTrajectoryMsg(*arm.getCurrentState(), start_plan.trajectory_);
+    robot_traj->setRobotTrajectoryMsg(*arm.getCurrentState(), start_plan.trajectory);
     if (!totg.computeTimeStamps(*robot_traj, 0.3, 0.3)) {
       RCLCPP_ERROR(logger, "Time parameterization for start wp FAILED.");
     } else {
-      robot_traj->getRobotTrajectoryMsg(start_plan.trajectory_);
+      robot_traj->getRobotTrajectoryMsg(start_plan.trajectory);
     }
     arm.execute(start_plan);
   } else {

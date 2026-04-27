@@ -6,8 +6,6 @@
   <maintainer email="darshmenon02@gmail.com">darshmenon</maintainer>
   <license>TODO: License declaration</license>
 
-  <buildtool_depend>ament_python</buildtool_depend>
-
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>

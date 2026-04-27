@@ -90,7 +90,7 @@ int main(int argc, char * argv[])
       auto robot_traj = std::make_shared<robot_trajectory::RobotTrajectory>(robot_model, "arm");
       robot_traj->setRobotTrajectoryMsg(
         *arm_group_interface.getCurrentState(),
-        plan.trajectory_
+        plan.trajectory
       );
 
       // Replace missing getters with the known 0.3 scale
@@ -101,7 +101,7 @@ int main(int argc, char * argv[])
         all_tests_passed = false;
         break;
       }
-      robot_traj->getRobotTrajectoryMsg(plan.trajectory_);
+      robot_traj->getRobotTrajectoryMsg(plan.trajectory);
       // --- End fix ---
 
       RCLCPP_INFO(logger, "Planning for Target %zu SUCCESS. Executing...", i + 1);

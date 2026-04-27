@@ -1,11 +1,8 @@
-sensors:
-  - default_sensor
-default_sensor:
-  filtered_cloud_topic: filtered_cloud
-  max_range: 1.5
-  max_update_rate: 1.0
-  padding_offset: 0.2
-  padding_scale: 1.0
-  point_cloud_topic: /camera_head/depth/color/points
-  point_subsample: 1
-  sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+# 关闭 3D 传感器/octomap 集成：
+# 本项目的感知路径是 get_planning_scene_server 读深度点云做平面+聚类分割，
+# 直接把检测到的 cylinder 当 CollisionObject 添加进 planning scene。
+# 额外再跑 MoveIt 的 PointCloudOctomapUpdater 意义不大，还会因为 shape_mask
+# 过滤不彻底让机器人自身体素填进 octomap，导致所有 grasp pose IK
+# 都和 <octomap> 碰撞 (0/24)，pick 规划永远失败。
+# 如需恢复 octomap，把下面的 sensors: [] 改回 - default_sensor 并恢复原配置。
+sensors: []

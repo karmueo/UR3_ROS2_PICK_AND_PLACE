@@ -1,5 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
+  <!-- 保留 40cm × 1.5cm 的细长几何以兼容 get_planning_scene_server
+       的 circle/line 检测阈值，但改成蓝色外观，用于验证"抓取另一个物体"。 -->
   <model name="red_cylinder">
     <static>false</static>
     <link name="link">
@@ -24,11 +26,11 @@
         <surface>
           <friction>
             <ode>
-              <mu>1.2</mu> <!-- Increased friction coefficient -->
-              <mu2>1.2</mu2> <!-- Increased friction coefficient -->
+              <mu>1.2</mu>
+              <mu2>1.2</mu2>
               <fdir1>0 0 1</fdir1>
-              <slip1>0.0005</slip1> <!-- Reduced slip -->
-              <slip2>0.0005</slip2> <!-- Reduced slip -->
+              <slip1>0.0005</slip1>
+              <slip2>0.0005</slip2>
             </ode>
             <torsional>
               <coefficient>0.1</coefficient>
@@ -60,10 +62,11 @@
           </cylinder>
         </geometry>
         <material>
-          <ambient>1.0 0.0 0.0 1</ambient>
-          <diffuse>1.0 0.0 0.0 1</diffuse>
-          <specular>0.5 0.5 0.5 1</specular>
-          <emissive>0.1 0 0 1</emissive>
+          <!-- 亮蓝色，便于在 Gazebo GUI 里和原红色版本区分 -->
+          <ambient>0.1 0.3 1.0 1</ambient>
+          <diffuse>0.1 0.3 1.0 1</diffuse>
+          <specular>0.6 0.6 0.7 1</specular>
+          <emissive>0 0 0.15 1</emissive>
         </material>
       </visual>
     </link>

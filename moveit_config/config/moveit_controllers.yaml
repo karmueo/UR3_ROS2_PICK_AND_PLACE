@@ -1,5 +1,17 @@
 # MoveIt uses this configuration for controller management
 
+# trajectory_execution 段必须位于本文件（而非 ompl_planning.yaml），
+# 因为 MoveItConfigsBuilder.trajectory_execution(file_path=...) 从此文件读取：
+#   - allowed_execution_duration_scaling：期望完成时间 = 轨迹 duration × 此值
+#   - allowed_goal_duration_margin：在上述时间之外追加的宽限秒数
+# 夹爪动作 duration 很短（< 1 s），默认 1.2 倍 + 0.5 s 宽限总计 ≈ 2 s，
+# 抓取面接触时物理反弹 + stall 检测窗口 1 s 容易撞线，统一放宽到 5 × + 10 s。
+trajectory_execution:
+  allowed_execution_duration_scaling: 5.0
+  allowed_goal_duration_margin: 10.0
+  allowed_start_tolerance: 0.1
+  execution_duration_monitoring: false
+
 moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
 moveit_simple_controller_manager:

@@ -30,6 +30,11 @@ if [ -z "${DISPLAY:-}" ]; then
     exit 1
 fi
 
+# 强制 Ogre2 / OpenGL 走 NVIDIA RTX 3090，避免落到板载 ASPEED 导致 RTF 偏低
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+export __VK_LAYER_NV_optimus=NVIDIA_only
+
 echo "Launching Gazebo simulation..."
 ros2 launch ur_gazebo ur.gazebo.launch.py \
     world_file:=pick_and_place_demo.world \

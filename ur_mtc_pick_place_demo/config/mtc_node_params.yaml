@@ -2,7 +2,11 @@ mtc_node:
   ros__parameters:
     # General parameters
     execute: true
-    max_solutions: 50  # Increased from 25
+    # Phase 8 终值：max_solutions=5 兼顾"0 物理掉落"与"规划 55s"
+    # 实测对比：3→67% 掉落（罐子飞 2 m+），5→0/3 掉落，10→0/3 掉落，50→0/2 掉落
+    # 根因：N=3 时 MTC task.plan() 只评估 3 个候选解，front 解偶发是"边缘解"
+    # （某些 wrist 极限构型导致 Gazebo ODE 接触爆炸）。N=5 解空间足以筛掉边缘解。
+    max_solutions: 5
 
     # Controller parameters
     controller_names:
@@ -21,12 +25,13 @@ mtc_node:
     world_frame: "base_link"
     collision_checking: true  # Explicit collision checking enable
 
-    # Object parameters (critical fixes)
+    # Object parameters - 目标：coke_can (12cm 高, 3.3cm 半径)
+    # 注意：当前 world 只保留 coke_can 一个物体；感知参数已 loosen 以支持更大半径。
     object_name: "cylinder_1"
     object_type: "cylinder"
     object_reference_frame: "base_link"
-    object_dimensions: [0.35, 0.0125]  # Match exact dimensions from error log
-    object_pose: [0.22, 0.12, 0.15, 0.0, 0.0, 0.0]  # Z increased +0.05
+    object_dimensions: [0.12, 0.033]    # coke_can 高 × 半径
+    object_pose: [0.22, 0.15, 0.06, 0.0, 0.0, 0.0]   # coke_can 中心估计位姿
 
     # Grasp parameters (key collision fixes)
     grasp_frame_transform: [0.0, 0.0, 0.12, 0.0, 1.5708, 0.0]  # fingers grab sideways
@@ -42,22 +47,26 @@ mtc_node:
     move_to_pick_timeout: 10.0
     move_to_place_timeout: 10.0
 
-    # Grasp generation (critical fixes)
-    grasp_pose_angle_delta: 0.2618  # ~15 degrees
-    grasp_pose_max_ik_solutions: 25
+    # Grasp generation - Phase 8 D1 对照：恢复 Phase 7 前原值
+    grasp_pose_angle_delta: 0.2618  # 15° (was 30° in Phase 7)
+    grasp_pose_max_ik_solutions: 25  # (was 8 in Phase 7)
     grasp_pose_min_solution_distance: 0.5
 
-    # Place generation
-    place_pose_max_ik_solutions: 15
+    # Place generation - Phase 8 D1 对照：恢复 Phase 7 前原值
+    place_pose_max_ik_solutions: 15  # (was 5 in Phase 7)
 
     # Cartesian planning
-    cartesian_max_velocity_scaling: 0.8
-    cartesian_max_acceleration_scaling: 0.8
+    # 关节速度/加速度上限缩放系数，仅作用于 approach/lift/lower/retreat 四段直线运动
+    # CLAUDE.md 硬约束 ≤ 0.3：更高会让 IPTP 生成超出 Gazebo 控制器跟踪公差的轨迹 → CONTROL_FAILED (-4)
+    cartesian_max_velocity_scaling: 0.3
+    cartesian_max_acceleration_scaling: 0.3
+    # Phase 8 D1 对照：恢复 Phase 7 前原值 1 mm
     cartesian_step_size: 0.001
 
     # Collision avoidance
     collision_clearance: 0.02  # safety margin
 
     # Debugging parameters
-    visualize_solutions: true
+    # 关闭解的 marker publish 以略减开销；planning scene 仍向 RViz 发布用于可视化。
+    visualize_solutions: false
     publish_planning_scene: true

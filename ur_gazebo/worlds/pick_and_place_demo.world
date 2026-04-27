@@ -2,8 +2,11 @@
 <sdf version="1.7">
   <world name="default">
     <physics name="default_physics" type="ode">
-      <max_step_size>0.001</max_step_size>
+      <!-- 物理步长 4 ms（250 Hz），进一步降低单核 CPU 压力；PTP/MoveIt 控制器周期为 50 Hz，250 Hz 物理保有 5 倍裕度 -->
+      <max_step_size>0.004</max_step_size>
       <real_time_factor>1</real_time_factor>
+      <!-- 显式声明每秒物理步数，避免回退到 1000 Hz 默认值 -->
+      <real_time_update_rate>250</real_time_update_rate>
       <gravity>0.0 0.0 -9.8</gravity>
     </physics>
 
@@ -23,27 +26,32 @@
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
     </include>
 
-    <!-- Red cylinder — reachable by UR3 arm -->
+    <!-- 相机装在 torso_link 高 0.5m、pitch 25°向下、yaw 90°，视锥指向 +Y 方向。
+         只有 y >= 0.10 的物体能进入点云。把 coke_can 移到 y=0.15 让它被看到。
+         red_cylinder + mustard + cheezit 暂时注释，只留 coke_can 作为唯一目标，
+         简化感知调试。 -->
+
+    <!--
     <include>
       <uri>model://red_cylinder</uri>
       <name>red_cylinder</name>
       <pose>0.22 0.12 0.20 0 0 0</pose>
     </include>
 
-    <!-- YCB objects for richer scene -->
     <include>
       <uri>model://mustard</uri>
       <pose>0.28 0.05 0.08 0 0 0</pose>
     </include>
 
     <include>
-      <uri>model://coke_can</uri>
-      <pose>0.25 -0.10 0.075 0 0 0</pose>
-    </include>
-
-    <include>
       <uri>model://cheezit_big_original</uri>
       <pose>0.30 0.18 0.04 0 0 0</pose>
+    </include>
+    -->
+
+    <include>
+      <uri>model://coke_can</uri>
+      <pose>0.22 0.15 0.075 0 0 0</pose>
     </include>
 
     <!-- Bin / drop zone -->

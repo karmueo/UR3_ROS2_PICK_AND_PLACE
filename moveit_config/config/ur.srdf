@@ -63,8 +63,16 @@
         <joint name="wrist_2_joint" value="0"/>
         <joint name="wrist_3_joint" value="1.0"/>
     </group_state>
+    <!--
+      "half_closed" 被 MTC 用作夹可乐罐时的目标位姿。Robotiq 2F-85：
+        finger_joint=0.00 → 完全张开 (85 mm 指距)
+        finger_joint=0.80 → 完全闭合 (0 mm)
+      coke_can 直径 66 mm → 需要 finger_joint ≈ 0.18。给 0.22 留一点压紧余量。
+      若改回 0.60：夹爪会被罐子物理卡在 0.2 附近，永远到不了 0.6 目标，
+      速度因反弹力持续 >阈值 → 既 reach goal 失败又 stall 不触发 → MoveIt 超时。
+    -->
     <group_state name="half_closed" group="gripper">
-        <joint name="finger_joint" value="0.60"/>
+        <joint name="finger_joint" value="0.22"/>
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="gripper" parent_link="tool0" group="gripper" parent_group="arm"/>
@@ -210,5 +218,28 @@
     <disable_collisions link1="shoulder_link" link2="right_outer_knuckle" reason="Never"/>
     <disable_collisions link1="shoulder_link" link2="robotiq_arg2f_base_link" reason="Never"/>
 
-
+    <!-- torso_link 与夹爪 11 个子链接的自碰撞排除：避免 RRTConnect 折臂时误报 -->
+    <disable_collisions link1="torso_link" link2="robotiq_arg2f_base_link" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="left_outer_knuckle" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="left_outer_finger" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="left_inner_knuckle" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="left_inner_finger" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="left_inner_finger_pad" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="right_outer_knuckle" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="right_outer_finger" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="right_inner_knuckle" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="right_inner_finger" reason="Never"/>
+    <disable_collisions link1="torso_link" link2="right_inner_finger_pad" reason="Never"/>
+    <!-- camera_head_link 与夹爪 11 个子链接：相机安装位于 torso 顶端，同样需要排除 -->
+    <disable_collisions link1="camera_head_link" link2="robotiq_arg2f_base_link" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="left_outer_knuckle" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="left_outer_finger" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="left_inner_knuckle" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="left_inner_finger" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="left_inner_finger_pad" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="right_outer_knuckle" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="right_outer_finger" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="right_inner_knuckle" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="right_inner_finger" reason="Never"/>
+    <disable_collisions link1="camera_head_link" link2="right_inner_finger_pad" reason="Never"/>
 </robot>

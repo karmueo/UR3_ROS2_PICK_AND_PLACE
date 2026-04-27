@@ -1078,18 +1078,46 @@ std::vector<moveit_msgs::msg::CollisionObject> segmentObjects(
     std::vector<double> top_model_parameters;
     int top_model_votes = 0;
 
-    // Check the top line cluster
-    if (!clusteredLineModels.empty() && clusteredLineModels[0].votes > top_model_votes) {
-      top_model_type = "line";
-      top_model_parameters = clusteredLineModels[0].parameters;
-      top_model_votes = clusteredLineModels[0].votes;
-    }
-
-    // Check the top circle cluster
-    if (!clusteredCircleModels.empty() && clusteredCircleModels[0].votes > top_model_votes) {
+    // 选模策略（2026-04-23 修改）：
+    //   1. 优先用 RANSAC 找到的 circle 模型
+    //   2. 若 RANSAC 找不到 circle（典型场景：coke_can 罐顶实心圆盘让点大多落在圆内部
+    //      而非圆周边缘，circle RANSAC 无法达到 inlier_threshold），但 cluster 的 XY
+    //      bounding-box aspect ratio 接近 1（说明形状本身是圆柱截面），则**强制**
+    //      从 bounding box 生成 circle 参数（centroid + 最大半径）
+    //   3. 以上都不成立才 fallback 到 line → box
+    if (!clusteredCircleModels.empty()) {
       top_model_type = "circle";
       top_model_parameters = clusteredCircleModels[0].parameters;
       top_model_votes = clusteredCircleModels[0].votes;
+    } else {
+      // 计算 cluster XY bounding box 尺寸
+      double xmin = std::numeric_limits<double>::max();
+      double xmax = -std::numeric_limits<double>::max();
+      double ymin = std::numeric_limits<double>::max();
+      double ymax = -std::numeric_limits<double>::max();
+      for (const auto& p : cluster->points) {
+        xmin = std::min(xmin, static_cast<double>(p.x));
+        xmax = std::max(xmax, static_cast<double>(p.x));
+        ymin = std::min(ymin, static_cast<double>(p.y));
+        ymax = std::max(ymax, static_cast<double>(p.y));
+      }
+      double dx = xmax - xmin;
+      double dy = ymax - ymin;
+      double aspect_ratio = std::max(dx, dy) / std::max(std::min(dx, dy), 1e-6);
+      // aspect_ratio <= 1.8 说明 XY 轮廓近似方形 → 很可能是圆柱俯视
+      if (aspect_ratio <= 1.8 && dx > 0.01 && dy > 0.01) {
+        top_model_type = "circle";
+        top_model_parameters = {
+          (xmin + xmax) / 2.0,             // center_x
+          (ymin + ymax) / 2.0,             // center_y
+          std::max(dx, dy) / 2.0           // radius（取较大轴的一半）
+        };
+        top_model_votes = 0;
+      } else if (!clusteredLineModels.empty()) {
+        top_model_type = "line";
+        top_model_parameters = clusteredLineModels[0].parameters;
+        top_model_votes = clusteredLineModels[0].votes;
+      }
     }
 
     // Log the selected top model
